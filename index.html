@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpinGuessr©</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons (sun/moon for dark mode toggle) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Coming+Soon&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Dark Mode Toggle Button -->
+    <button id="darkModeToggle" class="dark-mode-toggle">
+        <i id="sunIcon" class="fa-solid fa-sun" style="display: block;"></i>
+        <i id="moonIcon" class="fa-solid fa-moon" style="display: none;"></i>
+    </button>
+
+    <div class="game-container">
+        <!-- Start Menu -->
+        <div id="start-menu" class="flex flex-col items-center">
+            <h1 class="game-title">SpinGuessr!</h1>
+            <button id="play-button" class="play-button">Play</button>
+        </div>
+
+        <!-- Game Play Area -->
+        <div id="game-area" class="hidden flex flex-col items-center">
+            <h2 id="monument-title" class="text-3xl font-bold text-gray-700 mb-4">Select a Monument</h2>
+            <div class="casino-wheel-container">
+                <ul id="monument-wheel" class="casino-wheel">
+                    <!-- Monument items will be populated here by JavaScript -->
+                </ul>
+                <div class="casino-wheel-overlay"></div>
+            </div>
+            <button id="stop-monument-button" class="game-button mt-4">Spin!</button>
+
+            <div id="estimation-section" class="hidden w-full flex flex-col items-center">
+                <p id="current-monument-text" class="text-xl text-gray-800 mb-4"></p>
+                <label for="distance-input" class="text-lg text-gray-700 mb-2">Estimate the distance in km:</label>
+                <input type="number" id="distance-input" class="game-input" placeholder="Your guess in km">
+                <button id="validate-button" class="game-button mt-4">Validate Guess</button>
+            </div>
+
+            <div id="distance-reveal-section" class="hidden w-full flex flex-col items-center">
+                <p class="text-xl text-gray-800 mb-4">The actual distance was:</p>
+                <div class="casino-wheel-container">
+                    <ul id="distance-wheel" class="casino-wheel">
+                        <!-- Distance items will be populated here by JavaScript -->
+                    </ul>
+                    <div class="casino-wheel-overlay"></div>
+                </div>
+                <p id="feedback-message" class="text-2xl font-bold text-gray-800 mt-4"></p>
+                <button id="retry-button" class="game-button mt-4">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box Element -->
+    <div id="message-box" class="message-box"></div>
+
+    <!-- VPN Protection Message -->
+    <div id="vpn-message" class="vpn-message hidden">
+        You must disable your VPN to play this game!
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        A game similar to GeoGuessr, but with a simpler mechanic.<br>
+        You should disable your VPN for a better gaming experience!
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
